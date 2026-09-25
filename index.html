@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TransitPulse - Bus Crowd Prediction System</title>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- Leaflet for Real-time Map Tracking (Gamyam Style) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</head>
+<body>
+    <div id="app">
+        <!-- Auth View: Login -->
+        <div id="login-view" class="auth-container hidden">
+            <div class="auth-card">
+                <div class="auth-image" style="background-image: url('login_bus.png');">
+                    <h2>Welcome back</h2>
+                    <p>Ready for your next journey?</p>
+                </div>
+                <div class="auth-form">
+                    <div class="form-group">
+                        <label>EMAIL ADDRESS</label>
+                        <div class="input-with-icon">
+                            <i class="fa-solid fa-at"></i>
+                            <input type="email" placeholder="name@example.com" value="alex.chen@transitpulse.com">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="label-row">
+                            <label>PASSWORD</label>
+                            <a href="#" class="forgot-link">Forgot Password?</a>
+                        </div>
+                        <div class="input-with-icon">
+                            <i class="fa-solid fa-lock"></i>
+                            <input type="password" placeholder="••••••••" value="password123">
+                            <i class="fa-solid fa-eye action-icon"></i>
+                        </div>
+                    </div>
+                    <button class="btn-primary full-width" onclick="app.login()">Login <i class="fa-solid fa-arrow-right"></i></button>
+                    
+                    <div class="divider">
+                        <span>OR CONTINUE WITH</span>
+                    </div>
+                    
+                    <div class="social-login">
+                        <button class="btn-outline"><i class="fa-brands fa-google"></i> GOOGLE</button>
+                        <button class="btn-outline"><i class="fa-brands fa-apple"></i> APPLE ID</button>
+                    </div>
+                    
+                    <p class="auth-footer">Don't have an account? <a href="#" onclick="app.showSignup()">Sign up</a></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Auth View: Signup -->
+        <div id="signup-view" class="auth-container split-screen hidden">
+            <div class="split-left" style="background-image: url('signup_bus.png');">
+                <div class="split-overlay">
+                    <h1>Seamless Journeys.</h1>
+                    <p>Experience the pulse of the city with real-time tracking and intuitive route planning for the modern commuter.</p>
+                </div>
+            </div>
+            <div class="split-right">
+                <div class="auth-form split-form">
+                    <h2>Join the community</h2>
+                    <p class="subtitle">Create an account to start tracking your urban flow.</p>
+                    
+                    <div class="form-group">
+                        <label>FULL NAME</label>
+                        <div class="input-with-icon">
+                            <i class="fa-solid fa-user"></i>
+                            <input type="text" placeholder="Jane Doe">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>EMAIL ADDRESS</label>
+                        <div class="input-with-icon">
+                            <i class="fa-solid fa-envelope"></i>
+                            <input type="email" placeholder="jane@example.com">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>PASSWORD</label>
+                            <div class="input-with-icon">
+                                <i class="fa-solid fa-lock"></i>
+                                <input type="password" placeholder="••••••••">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>CONFIRM</label>
+                            <div class="input-with-icon">
+                                <i class="fa-solid fa-rotate-right"></i>
+                                <input type="password" placeholder="••••••••">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="terms">
+                        <label for="terms">I agree to the <a href="#">Terms and Conditions</a> and the <a href="#">Privacy Policy</a>.</label>
+                    </div>
+                    
+                    <button class="btn-primary full-width mt-4" onclick="app.signup()">Create Account</button>
+                    <p class="auth-footer">Already have an account? <a href="#" onclick="app.showLogin()">Log in</a></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dashboard View -->
+        <div id="dashboard-view" class="dashboard-layout">
+            <!-- Sidebar -->
+            <aside class="sidebar">
+                <div class="brand">
+                    <h2>TransitPulse</h2>
+                    <p>Reliable Commute</p>
+                </div>
+                <nav class="sidebar-nav">
+                    <a href="#" class="nav-item active" data-target="home"><i class="fa-solid fa-border-all"></i> Home</a>
+                    <a href="#" class="nav-item" data-target="history"><i class="fa-solid fa-clock-rotate-left"></i> History</a>
+                    <a href="#" class="nav-item" data-target="alerts"><i class="fa-solid fa-bell"></i> Alerts</a>
+                    <a href="#" class="nav-item" data-target="about"><i class="fa-solid fa-circle-info"></i> About</a>
+                </nav>
+                <div class="sidebar-bottom" id="sidebar-user-section">
+                    <div class="user-profile-mini" onclick="app.navigate('settings')">
+                        <img src="https://i.pravatar.cc/150?u=a042581f4e29026704d" alt="Profile" class="avatar">
+                        <div class="user-info">
+                            <h4 id="mini-profile-name">Guest</h4>
+                            <p id="mini-profile-tier">Free Mode</p>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="main-content">
+                <!-- Topbar -->
+                <header class="topbar">
+                    <div class="topbar-left">
+                        <h2 id="page-title" class="hidden-mobile">TransitPulse</h2>
+                    </div>
+                    <div class="topbar-right">
+
+                        <button class="icon-btn notification-btn auth-required"><i class="fa-solid fa-bell"></i><span class="badge">2</span></button>
+                        <button class="icon-btn auth-required" onclick="app.navigate('settings')"><i class="fa-solid fa-gear"></i></button>
+                        <img src="https://i.pravatar.cc/150?u=a042581f4e29026704d" alt="User" class="avatar-small auth-required">
+                        <button class="btn-outline guest-only" onclick="app.showLogin()" style="padding: 6px 12px; font-size:0.8rem;">Login</button>
+                        <button class="icon-btn auth-required" onclick="app.logout()" title="Logout"><i class="fa-solid fa-arrow-right-from-bracket"></i></button>
+                    </div>
+                </header>
+
+                <div class="content-scroll">
+                    <!-- Home Section -->
+                    <section id="home-section" class="content-section">
+                        <div class="hero-banner" style="background-image: linear-gradient(90deg, rgba(10,61,145,0.95) 0%, rgba(10,61,145,0.7) 100%), url('banner_bus.png');">
+                            <h1>Plan smarter, travel better</h1>
+                            <button class="btn-cyan" onclick="app.startJourneyFlow()"><i class="fa-solid fa-location-arrow"></i> Start Journey</button>
+                        </div>
+
+                        <div class="section-header auth-required">
+                            <h3>Favorite Routes</h3>
+                            <a href="#" class="view-all">View All</a>
+                        </div>
+                        <div class="route-cards auth-required" id="favorites-container">
+                            <p class="text-muted" style="width: 100%; text-align: center; padding: 20px;">No favorite routes yet. Click the star icon on a bus route to save it here!</p>
+                        </div>
+
+                        <h3 class="mt-8 mb-4 auth-required">Recent Travel</h3>
+                        <div class="table-container auth-required">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>SOURCE</th>
+                                        <th>DESTINATION</th>
+                                        <th>DATE</th>
+                                        <th>CROWD LEVEL</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="history-table-body">
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+
+                    <!-- Start Journey Flow Section -->
+                    <section id="journey-section" class="content-section hidden">
+                        <div class="page-header">
+                            <h2>Plan Your Journey</h2>
+                            <p>Find the best route with real-time crowd predictions.</p>
+                        </div>
+                        
+                        <div class="journey-layout">
+                            <div class="journey-form-card">
+                                <div class="form-group">
+                                    <label>CURRENT LOCATION / STARTING POINT</label>
+                                    <div class="input-with-icon">
+                                        <i class="fa-solid fa-location-dot text-blue"></i>
+                                        <input type="text" id="start-point" list="locations-list" placeholder="e.g., Secunderabad">
+                                        <i class="fa-solid fa-crosshairs action-icon"></i>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label>DESTINATION</label>
+                                    <div class="input-with-icon">
+                                        <i class="fa-solid fa-location-arrow text-gray"></i>
+                                        <input type="text" id="end-point" list="locations-list" placeholder="e.g., Hitec City">
+                                    </div>
+                                </div>
+                                <datalist id="locations-list">
+                                    <option value="Abids">
+                                    <option value="Afzalgunj">
+                                    <option value="Alugadda Bavi">
+                                    <option value="Ameerpet">
+                                    <option value="Assembly">
+                                    <option value="Attapur">
+                                    <option value="Balanagar">
+                                    <option value="Banjara Hills">
+                                    <option value="Begumpet">
+                                    <option value="Bharat Nagar">
+                                    <option value="BHEL">
+                                    <option value="Bowenpally">
+                                    <option value="Chaderghat">
+                                    <option value="Chandanagar">
+                                    <option value="City College">
+                                    <option value="Czech Colony">
+                                    <option value="Dilsukhnagar">
+                                    <option value="Erragadda">
+                                    <option value="ESI">
+                                    <option value="Gandhi Hospital">
+                                    <option value="Habsiguda">
+                                    <option value="Hayathnagar">
+                                    <option value="High Court">
+                                    <option value="Hitec City">
+                                    <option value="Hyderguda">
+                                    <option value="JNTU">
+                                    <option value="Jubilee Hills">
+                                    <option value="Khairatabad">
+                                    <option value="Kondapur">
+                                    <option value="Kothapet">
+                                    <option value="Koti">
+                                    <option value="KPHB">
+                                    <option value="Kukatpally">
+                                    <option value="Lakdikapul">
+                                    <option value="LB Nagar">
+                                    <option value="Lingampally">
+                                    <option value="Madinaguda">
+                                    <option value="Madhapur">
+                                    <option value="Madhura Nagar">
+                                    <option value="Malakpet">
+                                    <option value="Masab Tank">
+                                    <option value="Mehdipatnam">
+                                    <option value="Mettuguda">
+                                    <option value="Miyapur">
+                                    <option value="Moosapet">
+                                    <option value="Musheerabad">
+                                    <option value="Muthangi">
+                                    <option value="Nagole">
+                                    <option value="Panama Godowns">
+                                    <option value="Paradise">
+                                    <option value="Patancheru">
+                                    <option value="Patny">
+                                    <option value="Peddamma Temple">
+                                    <option value="Punjagutta">
+                                    <option value="Rajendra Nagar">
+                                    <option value="Rathifile Bus Station">
+                                    <option value="RC Puram">
+                                    <option value="Sanath Nagar">
+                                    <option value="Secretariat">
+                                    <option value="Secunderabad">
+                                    <option value="SR Nagar">
+                                    <option value="Survey of India">
+                                    <option value="Tadbund">
+                                    <option value="Tank Bund">
+                                    <option value="Tarnaka">
+                                    <option value="Uppal">
+                                    <option value="Yousufguda">
+                                    <option value="Zoo Park">
+                                </datalist>
+                                <button class="btn-primary full-width" onclick="app.findBuses()">Find Available Buses</button>
+                            </div>
+                            
+                            <div id="search-loader" class="hidden" style="text-align: center; padding: 40px; background: white; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+                                <i class="fa-solid fa-circle-notch fa-spin text-blue" style="font-size: 2.5rem;"></i>
+                                <p id="search-loader-text" style="margin-top: 15px; color: var(--text-muted); font-weight: 500;">Fetching live routes and predictions...</p>
+                            </div>
+
+                            <div id="bus-results" class="bus-results hidden">
+                                <h3>Available Buses</h3>
+                                <div class="bus-list">
+                                    <!-- Bus items populated by JS -->
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Live Tracking Modal / Area -->
+                        <div id="live-tracking" class="live-tracking-card hidden mt-6">
+                            
+                            <div class="detail-header">
+                              <div>
+                                <div class="detail-bus-num" id="track-route">—</div>
+                                <div class="detail-bus-route" id="track-desc">— <i class="fa-regular fa-star action-icon" onclick="this.classList.toggle('fa-solid'); this.classList.toggle('fa-regular'); this.classList.toggle('text-yellow'); event.stopPropagation();" title="Favorite this route" style="cursor:pointer; font-size:18px; vertical-align:middle; margin-left:8px;"></i></div>
+                              </div>
+                              <div>
+                                <button class="btn-outline" id="refresh-btn" onclick="app.refreshTracking(this)">
+                                  <i class="fa-solid fa-rotate-right"></i> REFRESH
+                                </button>
+                              </div>
+                            </div>
+                            
+                            <!-- GAMYAM STYLE LIVE MAP -->
+                            <div id="bus-map" style="height: 280px; width: 100%; border-radius: 13px; margin-bottom: 20px; border: 1px solid var(--border-color); z-index: 1;"></div>
+                            
+                            <div class="stop-timeline">
+                              <div class="stop-tl-title">⚡ LIVE STOP TRACKER</div>
+                              <div class="stops-list-vertical" id="stops-list-vertical"></div>
+                            </div>
+                            
+                            <div class="detail-grid">
+                              <div class="detail-card">
+                                <div class="detail-card-label">🪑 Total Seats</div>
+                                <div class="detail-card-big text-primary" id="track-seats">—</div>
+                                <div class="detail-card-sub">Bus capacity</div>
+                              </div>
+                              <div class="detail-card">
+                                <div class="detail-card-label">✅ Available Seats</div>
+                                <div class="detail-card-big" id="track-avail">—</div>
+                                <div class="detail-card-sub" id="d-avail-sub">—</div>
+                              </div>
+                              <div class="detail-card span2">
+                                <div class="detail-card-label">👥 Current Passengers</div>
+                                <div style="display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap;">
+                                  <div>
+                                    <div class="detail-card-big" id="track-onboard">—</div>
+                                    <div class="detail-card-sub">Onboard right now</div>
+                                  </div>
+                                </div>
+                                <div class="pax-breakdown">
+                                  <div class="pax-item"><div class="pax-icon">🧑</div><div class="pax-count" id="d-adults">—</div><div class="pax-type">ADULTS</div></div>
+                                  <div class="pax-item"><div class="pax-icon">🧒</div><div class="pax-count" id="d-children">—</div><div class="pax-type">CHILDREN</div></div>
+                                  <div class="pax-item"><div class="pax-icon">🎫</div><div class="pax-count" id="d-tickets">—</div><div class="pax-type">TICKETS</div></div>
+                                </div>
+                              </div>
+                            </div>
+                            
+                            <div class="prediction-section">
+                              <div class="pred-label">🤖 ML CROWD FORECAST — NEXT STOP</div>
+                              <div class="pred-next">Predicted load at <span id="track-pred">—</span></div>
+                              <div class="meter-track"><div class="meter-fill" id="pred-bar" style="width:0%"></div></div>
+                              <div class="meter-labels"><span>Empty</span><span>Moderate</span><span>Full</span></div>
+                              <div style="margin-top:12px;">
+                                <span id="pred-text" style="font-weight:700;font-size:17px">—</span>
+                                <span style="color:var(--text-muted); font-size:13px;"> — <span id="pred-pax">—</span> est. passengers</span>
+                              </div>
+                              <div class="conf-row">
+                                <span class="conf-lbl">MODEL CONFIDENCE:</span>
+                                <div class="conf-dots" id="conf-dots"></div>
+                                <span style="font-size:11px;color:var(--text-muted); font-weight:bold;" id="conf-pct"></span>
+                              </div>
+                            </div>
+                            
+                            <div class="detail-card" style="margin-bottom:18px;">
+                              <div class="detail-card-label">📟 ETM TICKET MACHINE DATA — RECENT STOPS</div>
+                              <div class="etm-table-wrap">
+                                <table class="etm-table">
+                                  <thead><tr><th>STOP</th><th>BOARDED</th><th>DEBOARDED</th><th>TICKETS</th><th>LOAD</th></tr></thead>
+                                  <tbody id="etm-tbody"></tbody>
+                                </table>
+                              </div>
+                            </div>
+
+                        </div>
+                    </section>
+
+                    <!-- History Section -->
+                    <section id="history-section" class="content-section hidden">
+                        <div class="page-header">
+                            <h2>Travel History</h2>
+                            <p>Review your past commutes and crowd encounters.</p>
+                        </div>
+                        <div class="table-container card-shadow">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>SOURCE LOCATION</th>
+                                        <th>DESTINATION LOCATION</th>
+                                        <th>DATE & TIME</th>
+                                        <th>CROWD LEVEL</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="history-table-body">
+                                    <!-- Populated by JS -->
+                                </tbody>
+                            </table>
+                            <div class="pagination">
+                                <span>Showing 5 of 124 travels</span>
+                                <div class="page-controls">
+                                    <button class="page-btn"><i class="fa-solid fa-chevron-left"></i></button>
+                                    <button class="page-btn active">1</button>
+                                    <button class="page-btn">2</button>
+                                    <button class="page-btn">3</button>
+                                    <button class="page-btn"><i class="fa-solid fa-chevron-right"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Alerts Section -->
+                    <section id="alerts-section" class="content-section hidden">
+                        <div class="page-header">
+                            <h2>Crowd Alerts</h2>
+                            <p>Real-time occupancy warnings for your frequent routes.</p>
+                        </div>
+                        <div class="alerts-list">
+                            <div class="alert-card critical">
+                                <div class="alert-top">
+                                    <span class="alert-badge bg-red"><i class="fa-solid fa-triangle-exclamation"></i> CRITICAL CROWDING</span>
+                                    <span class="alert-time">Updated 2m ago</span>
+                                </div>
+                                <h3>Route 218: Patancheru - Koti</h3>
+                                <p>Extreme crowding reported at Platform 4. Expect boarding delays of up to 15 minutes. Consider alternate route 216. Bus is full, skip it.</p>
+                                <div class="alert-actions">
+                                    <div class="transit-icons">
+                                        <i class="fa-solid fa-bus-simple"></i>
+                                    </div>
+                                    <a href="#" class="view-link">View Live Map</a>
+                                </div>
+                            </div>
+                            
+                            
+                            
+                            <div class="alert-card warning">
+                                <div class="alert-content-row">
+                                    <div class="alert-icon-box bg-light-red">
+                                        <i class="fa-solid fa-bus"></i>
+                                    </div>
+                                    <div class="alert-details">
+                                        <h4>Bus 290 - Secunderabad Express</h4>
+                                        <p>Arrival in 8 mins • 92% Capacity</p>
+                                    </div>
+                                    <div class="alert-status text-red">HIGH CROWD</div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- About Section -->
+                    <section id="about-section" class="content-section hidden">
+                        <div class="page-header">
+                            <h2>About TransitPulse</h2>
+                            <p>Information about our technology and mission.</p>
+                        </div>
+                        <div class="about-content" style="text-align: center; margin-bottom: 20px;">
+                            <img src="WhatsApp Image 2026-04-26 at 11.55.43 PM.jpeg" alt="About TransitPulse" style="max-width: 100%; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                        </div>
+                    </section>
+
+                    <!-- Settings Section -->
+                    <section id="settings-section" class="content-section hidden">
+                        <div class="page-header">
+                            <h2>Settings</h2>
+                            <p>Manage your commuting preferences and account details</p>
+                        </div>
+                        
+                        <div class="settings-grid">
+                            <div class="settings-card profile-card">
+                                <div class="profile-info">
+                                    <div class="avatar-large-container">
+                                        <img src="https://i.pravatar.cc/150?u=a042581f4e29026704d" alt="Alex Chen" class="avatar-large">
+                                        <button class="cam-btn"><i class="fa-solid fa-camera"></i></button>
+                                    </div>
+                                    <div class="profile-details" id="profile-display">
+                                        <h3 id="profile-name">Alex Chen</h3>
+                                        <p id="profile-email">alex.chen@transitpulse.com</p>
+                                        <button class="btn-primary mt-2" onclick="app.toggleEditProfile()">EDIT PROFILE</button>
+                                    </div>
+                                    <div class="profile-details hidden" id="profile-edit-form">
+                                        <input type="text" id="edit-name" class="form-input mb-2" style="padding:8px; border:1px solid #ccc; border-radius:4px; width:100%;">
+                                        <input type="email" id="edit-email" class="form-input mb-2" style="padding:8px; border:1px solid #ccc; border-radius:4px; width:100%;">
+                                        <div style="display:flex; gap:8px;">
+                                            <button class="btn-primary mt-2" onclick="app.saveProfile()">SAVE</button>
+                                            <button class="btn-outline mt-2" onclick="app.toggleEditProfile()">CANCEL</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="profile-stats">
+                                    <div class="stat-item">
+                                        <span class="label">MEMBER SINCE</span>
+                                        <strong>October 2023</strong>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="label">TIER</span>
+                                        <strong>Reliable Commute</strong>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="settings-card appearance-card">
+                                <h3 class="card-title"><i class="fa-solid fa-palette"></i> Appearance</h3>
+                                <p class="card-desc">Choose your preferred visual theme for the Pulse interface.</p>
+                                <div class="theme-toggle">
+                                    <button class="theme-btn active" onclick="app.setTheme('light')"><i class="fa-solid fa-sun"></i> Light</button>
+                                    <button class="theme-btn" onclick="app.setTheme('dark')"><i class="fa-solid fa-moon"></i> Dark</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="settings-card full-width mt-6">
+                            <h3 class="card-title"><i class="fa-solid fa-users"></i> Crowd Alert Settings</h3>
+                            <div class="toggle-list">
+                                <div class="toggle-item">
+                                    <div class="toggle-info">
+                                        <h4>Density Alerts</h4>
+                                        <p>Receive notifications when stations or vehicles on your route exceed 75% capacity.</p>
+                                    </div>
+                                    <label class="switch">
+                                        <input type="checkbox" checked>
+                                        <span class="slider round"></span>
+                                    </label>
+                                </div>
+                                <div class="toggle-item">
+                                    <div class="toggle-info">
+                                        <h4>Journey Divert</h4>
+                                        <p>Automatically suggest alternative routes when high density is detected on your primary line.</p>
+                                    </div>
+                                    <label class="switch">
+                                        <input type="checkbox" checked>
+                                        <span class="slider round"></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </main>
+        </div>
+
+        <!-- Chatbot Window -->
+        <div id="chatbot-container" class="chatbot-hidden">
+            <div class="chatbot-header">
+                <div class="bot-info">
+                    <div class="bot-icon"><i class="fa-solid fa-robot"></i></div>
+                    <div>
+                        <h3>TransitPulse AI</h3>
+                        <span class="bot-badge">TRANSIT BOT</span>
+                    </div>
+                </div>
+                <div class="bot-actions">
+                    <button class="icon-btn"><i class="fa-solid fa-share-nodes"></i></button>
+                    <button class="icon-btn" onclick="app.toggleChatbot()"><i class="fa-solid fa-times"></i></button>
+                </div>
+            </div>
+            <div class="chatbot-messages" id="chat-messages">
+                <div class="message bot">
+                    <div class="msg-bubble">Hello! Where would you like to go today?</div>
+                    <span class="msg-time">10:02 AM</span>
+                </div>
+
+            </div>
+            <div class="chatbot-suggestions">
+                <button class="sugg-btn" onclick="app.sendChatMessage('Bus 218 crowd level?')">Bus 218 crowd level?</button>
+                <button class="sugg-btn" onclick="app.sendChatMessage('Fastest way to Koti?')">Fastest way to Koti?</button>
+                <button class="sugg-btn" onclick="app.sendChatMessage('Any delays today?')">Any delays today?</button>
+            </div>
+            <div class="chatbot-input">
+                <button class="icon-btn text-gray"><i class="fa-solid fa-paperclip"></i></button>
+                <input type="text" id="chat-input" placeholder="Ask TransitPulse about your route..." onkeypress="app.handleChatKeyPress(event)">
+                <button class="icon-btn text-gray"><i class="fa-solid fa-microphone"></i></button>
+                <button class="send-btn" onclick="app.sendChatMessageFromInput()"><i class="fa-solid fa-paper-plane"></i></button>
+            </div>
+            <div class="chatbot-footer">POWERED BY TRANSITPULSE INTELLIGENCE</div>
+        </div>
+        
+        <button id="chatbot-fab" class="chatbot-fab" onclick="app.toggleChatbot()">
+            <i class="fa-solid fa-robot"></i>
+        </button>
+
+        <div class="help-tooltip" id="help-tooltip">
+            Need help navigating, Alex?
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

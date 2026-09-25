@@ -1,0 +1,22 @@
+This are user interfaces I was created for my bus crowd prediction system website 
+Do a project on this .
+Create a complete web-based Bus Crowd Prediction System called "TransitPulse".
+
+The goal of this system is to predict the number of passengers in a bus using historical data and display crowd levels clearly to users.This are user interfaces I was created for my bus crowd prediction system website 
+Do a project on this .This are user interfaces I was created for my bus crowd prediction system website 
+Do a project on this .When I click on the start journey ,it should consist of starting point ,destination point ,and current location of the passengers should be there when user enters the details it shows how many buses are available then user will select the bus then it shows the how many passengers are avilable ,how many seats , no of adults and children's and there is a bus flow diagram which is live for example like bus is moving from one place to another ,and it also consist the prediction passengers level before it reaches the next stop,.the bus and locations names are must be real similar to real world ,and this total data will be changed regular as the real world behaviour and there should be refresh button.
+
+In History it consist of recently passengers viewed data of a busses.
+
+
+Alerts .keep some examples alerts like this buss is full skip it like examples.
+
+User interface and registrations are follow from the given photos which consist of user interface layout.
+
+
+Chatbot which act as the chatgpt it provides the details about buses and growd level and it also communicate with user general questions.
+
+
+And rest of the options in the given photos should be created your self but use the same layout and structure font style ,for example there is an option on the upper which is language option when I click on it some languages should be visible and user will select one language then the total website will changes to that language ,
+Like this you change the remaining options which I didn't explained
+Note: use font style,structure ,layout which I provides
